@@ -8,6 +8,7 @@ import chromadb
 import streamlit as st
 from sentence_transformers import SentenceTransformer
 from dotenv import load_dotenv
+from google import genai
 
 load_dotenv()
 
@@ -16,14 +17,16 @@ load_dotenv()
 # ============================================================
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_DIR = BASE_DIR / "data"
+DATA_DIR = BASE_DIR / "Data"
 CHROMA_DIR = BASE_DIR / ".chroma"
-COLLECTION_NAME = "petadel_policyassist"
 
+COLLECTION_NAME = "petadel_policyassist"
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 MAX_DISTANCE = 1.20
 SEMANTIC_RESULTS = 12
+
 OLLAMA_MODEL = "llama3.2:3b"
+GEMINI_MODEL = "gemini-2.5-flash"
 
 # ============================================================
 # PAGE CONFIGURATION
@@ -46,44 +49,35 @@ st.markdown(
         background-color: #171717;
         color: #eeeeee;
     }
-
     [data-testid="stSidebar"] {
         background-color: #202020;
     }
-
     [data-testid="stSidebar"] * {
         color: #dddddd;
     }
-
     .block-container {
         padding-top: 2rem;
     }
-
     input {
         background-color: #3d3d3d !important;
         color: #ffffff !important;
     }
-
     div[data-baseweb="input"] {
         background-color: #3d3d3d !important;
     }
-
     button[kind="primary"] {
         background-color: #b00000 !important;
         border-color: #b00000 !important;
         color: #ffffff !important;
     }
-
     button[kind="secondary"] {
         background-color: #303030 !important;
         border-color: #777777 !important;
         color: #eeeeee !important;
     }
-
     h1, h2, h3 {
         color: #f2f2f2;
     }
-
     p, li, label {
         color: #dddddd;
     }
@@ -302,7 +296,6 @@ POLICY_TOPIC_KEYWORDS = {
         "access privileges",
         "security violation",
     ],
-
     "remote work policy": [
         "remote work",
         "work remotely",
@@ -315,7 +308,6 @@ POLICY_TOPIC_KEYWORDS = {
         "remote employees",
         "office days",
     ],
-
     "attendance policy": [
         "attendance",
         "absent",
@@ -330,7 +322,6 @@ POLICY_TOPIC_KEYWORDS = {
         "call out",
         "calling out",
     ],
-
     "expense reimbursement policy": [
         "expense",
         "expenses",
@@ -345,7 +336,6 @@ POLICY_TOPIC_KEYWORDS = {
         "submit expense",
         "expense report",
     ],
-
     "employee leave policy": [
         "leave",
         "leaves",
@@ -371,7 +361,6 @@ POLICY_TOPIC_KEYWORDS = {
         "paid leave",
         "unpaid leave",
     ],
-
     "code of conduct policy": [
         "code of conduct",
         "conduct",
@@ -864,6 +853,7 @@ def _get_authoritative_leave_evidence():
         # version 3.0, active and approved. Fill only missing
         # metadata here so retrieval remains robust if the file's
         # front matter was not parsed correctly.
+
         metadata.setdefault(
             "policy_id",
             "HR-LEAVE-001",
@@ -1000,8 +990,10 @@ def retrieve_policy_evidence(question):
     # --------------------------------------------------------
     # HARD ROUTING FOR EXPLICIT LEAVE / PTO QUESTIONS
     # --------------------------------------------------------
+
     # Explicit leave intent must never fall through to an
     # unrelated policy such as Expense Reimbursement.
+
     if (
         strongest_topic == "employee leave policy"
         and strongest_topic_score >= 2
@@ -1211,6 +1203,7 @@ def select_supporting_evidence(
         # Explicit leave intent with no authoritative leave
         # evidence must remain unsupported. Do not select an
         # unrelated policy as the source.
+
         if strongest_topic == "employee leave policy":
             return []
 
@@ -1262,6 +1255,7 @@ def clean_ollama_output(text):
         return text
 
     # Remove ANSI escape sequences and terminal control codes
+
     text = re.sub(
         r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])",
         "",
@@ -1270,6 +1264,7 @@ def clean_ollama_output(text):
 
     # Remove remaining ASCII control characters while
     # preserving normal tabs and line breaks.
+
     text = re.sub(
         r"[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]",
         "",
@@ -1280,6 +1275,33 @@ def clean_ollama_output(text):
 
 
 def call_ollama(prompt):
+    # Cloud deployment: use free Gemini API when configured.
+
+    gemini_api_key = os.getenv(
+        "GEMINI_API_KEY"
+    )
+
+    if gemini_api_key:
+        try:
+            client = genai.Client(
+                api_key=gemini_api_key
+            )
+
+            response = client.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=prompt,
+            )
+
+            if response and response.text:
+                return response.text.strip()
+
+            return None
+
+        except Exception:
+            return None
+
+    # Local development: continue using Ollama exactly as before.
+
     ollama_path = find_ollama()
 
     if not ollama_path:
@@ -1303,8 +1325,6 @@ def call_ollama(prompt):
         if process.returncode != 0:
             return None
 
-        # Clean terminal cursor/control characters before
-        # returning the model response to Streamlit.
         return clean_ollama_output(
             process.stdout
         )
@@ -1382,6 +1402,7 @@ AUTHORITATIVE POLICY EVIDENCE:
 {evidence_text}
 
 Answer the question strictly from the evidence.
+
 """.strip()
 
 
@@ -1463,6 +1484,7 @@ POLICY EVIDENCE:
 {chr(10).join(item["document"] for item in evidence)}
 
 Give a direct answer based strictly on the policy evidence.
+
 """.strip()
 
     retry = call_ollama(
