@@ -1382,7 +1382,6 @@ Rules:
 11. Preserve exact policy numbers, deadlines, restrictions, and
     requirements.
 12. Do not repeat policy metadata, document headers, or the full policy text in the answer. Provide only the information needed to answer the employee's question.
-
 IMPORTANT:
 
 The evidence below has already been filtered by the application for
