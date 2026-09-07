@@ -17,7 +17,7 @@ load_dotenv()
 # ============================================================
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_DIR = BASE_DIR / "Data"
+DATA_DIR = BASE_DIR / "data"
 CHROMA_DIR = BASE_DIR / ".chroma"
 
 COLLECTION_NAME = "petadel_policyassist"
@@ -1888,8 +1888,15 @@ if st.session_state.answer:
     with st.container(
         border=True
     ):
+        display_answer = re.sub(
+            r"^#{1,6}\s*",
+            "",
+            st.session_state.answer,
+            flags=re.MULTILINE,
+        )
+
         st.markdown(
-            st.session_state.answer
+            display_answer
         )
 
     render_sources(
