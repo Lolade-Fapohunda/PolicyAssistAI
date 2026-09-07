@@ -19,12 +19,10 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 CHROMA_DIR = BASE_DIR / ".chroma"
-
 COLLECTION_NAME = "petadel_policyassist"
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 MAX_DISTANCE = 1.20
 SEMANTIC_RESULTS = 12
-
 OLLAMA_MODEL = "llama3.2:3b"
 GEMINI_MODEL = "gemini-2.5-flash"
 
@@ -296,6 +294,7 @@ POLICY_TOPIC_KEYWORDS = {
         "access privileges",
         "security violation",
     ],
+
     "remote work policy": [
         "remote work",
         "work remotely",
@@ -308,6 +307,7 @@ POLICY_TOPIC_KEYWORDS = {
         "remote employees",
         "office days",
     ],
+
     "attendance policy": [
         "attendance",
         "absent",
@@ -322,6 +322,7 @@ POLICY_TOPIC_KEYWORDS = {
         "call out",
         "calling out",
     ],
+
     "expense reimbursement policy": [
         "expense",
         "expenses",
@@ -336,6 +337,7 @@ POLICY_TOPIC_KEYWORDS = {
         "submit expense",
         "expense report",
     ],
+
     "employee leave policy": [
         "leave",
         "leaves",
@@ -361,6 +363,7 @@ POLICY_TOPIC_KEYWORDS = {
         "paid leave",
         "unpaid leave",
     ],
+
     "code of conduct policy": [
         "code of conduct",
         "conduct",
@@ -1255,7 +1258,6 @@ def clean_ollama_output(text):
         return text
 
     # Remove ANSI escape sequences and terminal control codes
-
     text = re.sub(
         r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])",
         "",
@@ -1728,7 +1730,6 @@ with st.sidebar:
     st.markdown(
         """
         **Petadel Technology Services**
-
         AI-powered policy knowledge assistant.
         """
     )
