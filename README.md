@@ -1,144 +1,214 @@
 # Petadel PolicyAssist AI
 
-## Overview
+An AI-powered policy assistant prototype built as the technical capstone for the Petadel AI Project Management Course.
 
-Petadel PolicyAssist AI is a working prototype policy assistant developed for Petadel Technology Services (PTS).
+PolicyAssist helps employees retrieve relevant policy information and receive responses grounded in approved policy evidence.
 
-The application helps users locate and understand approved internal policies through natural-language questions.
+## Project Overview
 
-The project demonstrates how project management principles can be applied to a working AI product.
+**Organization:** Petadel Technology Services (PTS)
+**Product:** Petadel PolicyAssist AI
+**Project Role:** AI Project Manager / Product Owner perspective
+**Architecture:** Retrieval-Augmented Generation (RAG)
+**Application:** Streamlit
+**Status:** Prototype / MVP Evaluation
+**Current Production Decision:** HOLD
 
-## Purpose
+## Business Problem
 
-PolicyAssist addresses the difficulty employees may experience when searching for and interpreting internal policy information.
+Employees may spend significant time searching for policies, determining which version is current, and understanding how policies apply to their situation.
 
-The system is designed to:
+PolicyAssist was designed to provide a centralized, searchable interface for retrieving relevant policy evidence.
 
-* Retrieve relevant policy information.
-* Use authoritative and active policy sources.
-* Generate responses supported by policy evidence.
-* Provide supporting policy citations.
-* Refuse unsupported questions rather than invent information.
-* Support policy governance and access considerations.
-
-## Core Architecture
+## Core Workflow
 
 ```text
 Policy Documents
-       ↓
+      ↓
 Document Processing
-       ↓
+      ↓
 Chunking
-       ↓
+      ↓
 Embeddings
-       ↓
+      ↓
 ChromaDB
-       ↓
+      ↓
 Semantic Retrieval
-       ↓
+      ↓
+Policy Eligibility Validation
+      ↓
 Response Generation
-       ↓
-Grounded Response
-       ↓
-Citation
-       ↓
-Streamlit Interface
+      ↓
+Grounding + Citation
+      ↓
+Employee Response
 ```
 
-## Response Generation
-
-The application supports two response-generation configurations.
-
-### Deployed Configuration
-
-When `GEMINI_API_KEY` is configured, the application uses:
-
-**Google Gen AI → Gemini 2.5 Flash**
-
-### Local Development Configuration
-
-When the Gemini API key is not available, the application can use:
-
-**Ollama → Llama 3.2 3B**
-
-The application code contains both configurations and selects the Gemini path when the API key is available.
+The system is designed to answer from retrieved policy evidence rather than relying solely on general model knowledge.
 
 ## Technology Stack
 
-| Technology            | Role                                           |
-| --------------------- | ---------------------------------------------- |
-| Python                | Programming language                           |
-| Streamlit             | Application and user interface                 |
-| Sentence Transformers | Embedding framework                            |
-| `all-MiniLM-L6-v2`    | Embedding model                                |
-| ChromaDB              | Vector database                                |
-| Google Gen AI         | Cloud model integration                        |
-| Gemini 2.5 Flash      | Response generation for deployed configuration |
-| Ollama                | Local model runtime                            |
-| Llama 3.2 3B          | Local response-generation fallback             |
+| Technology            | Purpose                                  |
+| --------------------- | ---------------------------------------- |
+| Python                | Application development                  |
+| Streamlit             | User interface                           |
+| Sentence Transformers | Text embeddings                          |
+| `all-MiniLM-L6-v2`    | Embedding model                          |
+| ChromaDB              | Vector database                          |
+| Google Gen AI         | Cloud model integration                  |
+| Gemini 2.5 Flash      | Deployed response-generation model       |
+| Ollama                | Local model runtime                      |
+| Llama 3.2 3B          | Local fallback response-generation model |
 
-## Policy Governance
+## Model Configuration
 
-PolicyAssist follows the rule:
+### Deployed
 
-> **Active + Authoritative + Approved + Required Metadata Present = Eligible For Retrieval**
+The deployed Streamlit application uses:
 
-Draft, superseded, unverified, or unresolved conflicting policies should not automatically be treated as authoritative sources.
+**Google Gen AI → Gemini 2.5 Flash**
 
-## Response Principle
+When the required Gemini API key is available, Gemini 2.5 Flash generates responses using the retrieved policy evidence.
 
-When sufficient policy evidence exists:
+### Local Development / Fallback
 
-**Retrieve → Ground → Answer → Cite**
+The application also supports:
 
-When sufficient authoritative evidence does not exist:
+**Ollama → Llama 3.2 3B**
 
-**Do Not Invent → Refuse or Escalate**
+This provides a local response-generation option when the Gemini API key is unavailable.
 
-The response-generation model is not treated as an independent source of company policy.
+The retrieval and grounding workflow remains the same across the configurations.
 
-## Quality Targets
+## Key Design Principles
 
-The project establishes the following targets:
+### Grounded Responses
 
-* Retrieval Accuracy ≥ 90%
-* Answer Accuracy ≥ 90%
-* Hallucination Rate < 2%
-* Citation Correctness = 100%
-* Unsupported-Question Refusal = 100%
-* Response Latency ≤ 10 seconds
-* User Satisfaction ≥ 85%
-* Critical Security Incidents = 0
+Responses should be supported by retrieved policy evidence.
 
-These targets require formal evaluation evidence before production readiness can be claimed.
+### Citation
 
-## Project Status
+The application provides supporting policy information so users can verify the source of an answer.
 
-The application is a working prototype.
+### Do Not Invent
 
-The current project decision is:
+When sufficient evidence is unavailable, the system should not create a policy requirement that is not supported by the available evidence.
+
+### Authority
+
+Policy documents should be evaluated based on characteristics such as:
+
+* Active status
+* Authority
+* Approval
+* Version
+* Effective date
+* Required metadata
+
+### Escalation
+
+Questions that cannot be answered reliably from available evidence should be identified for human review or escalation.
+
+## Project Quality Targets
+
+The project established the following target measures:
+
+| Measure            |       Target |
+| ------------------ | -----------: |
+| Retrieval accuracy |        ≥ 90% |
+| Hallucination rate |         < 2% |
+| Response latency   | ≤ 10 seconds |
+
+These are project targets requiring formal validation. The existence of a working prototype does not mean the targets have been fully demonstrated.
+
+## Testing and Evaluation
+
+Evaluation scenarios include:
+
+* Standard policy questions
+* Unsupported questions
+* Multi-policy questions
+* Conflicting policy information
+* Citation verification
+* Retrieval accuracy
+* Response accuracy
+* Hallucination behavior
+* Response latency
+* Security and access-control scenarios
+
+## Security Considerations
+
+A production implementation must include appropriate:
+
+* Authentication
+* Authorization
+* Role-based access
+* Document access controls
+* Sensitive information protection
+* Audit logging
+* Unauthorized-access testing
+
+Retrieval relevance does not automatically mean that a user is authorized to access the retrieved information.
+
+## MVP vs. Production
+
+The prototype demonstrates the core technical workflow:
+
+* Policy document ingestion
+* Embedding generation
+* Vector retrieval
+* Policy eligibility
+* Response generation
+* Grounding
+* Citation
+* User interaction
+
+However, a functioning prototype is not equivalent to production readiness.
+
+Production deployment requires additional evidence for:
+
+* AI quality
+* Security
+* Governance
+* Performance
+* User acceptance testing
+* Monitoring
+* Risk controls
+* Rollback
+* Operational readiness
+
+## Current Project Decision
 
 **HOLD**
 
-The prototype demonstrates the core policy-assistance workflow, but production release requires additional evidence covering evaluation, UAT, security validation, monitoring, rollback, governance, and final release approval.
+The prototype demonstrates technical feasibility, but production release is not approved.
 
-## Project Management Context
+The HOLD decision remains in place until the required evaluation, security, governance, testing, monitoring, and release-readiness evidence has been completed and reviewed.
 
-Petadel PolicyAssist AI is the capstone project for the AI Project Management Course.
+## Project Management Perspective
 
-The project demonstrates:
+This repository is part of an AI Project Management capstone demonstrating that an AI Project Manager must manage more than the technology itself.
 
-* Business problem definition
-* Requirements management
+Key project-management responsibilities include:
+
+* Requirements
+* Stakeholder management
 * Product planning
-* Architecture decision-making
+* AI architecture decisions
 * Data governance
-* Evaluation
 * Risk management
 * Security
-* Testing
-* UAT
+* AI evaluation
+* Testing and UAT
 * Release readiness
 * Monitoring
-* Continuous improvement
-* Evidence-based decision-making
+* Change management
+* Go / Hold / No-Go decisions
+
+## Related Course Repository
+
+The PolicyAssist project is the capstone for the **AI Project Management Course** and demonstrates the complete project lifecycle from initiation through evaluation and release readiness.
+
+The project emphasizes a central principle:
+
+> A working AI prototype demonstrates technical feasibility. It does not, by itself, demonstrate production readiness.
